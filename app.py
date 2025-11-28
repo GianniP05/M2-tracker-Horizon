@@ -4,36 +4,50 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from streamlit_browser_storage import BrowserStorage
-
 st.set_page_config(page_title="M² Portfolio Tracker (Research Committee)", layout="centered")
 st.title("📈 M² Portfolio Tracker by Horizon Capital")
 
+# -----------------------------------------
+# URL STORAGE HELPERS
+# -----------------------------------------
+def save_to_url():
+    tickers = ",".join([p["ticker"] for p in st.session_state.positions])
+    weights = ",".join([str(p["weight"]) for p in st.session_state.positions])
+    st.experimental_set_query_params(tickers=tickers, weights=weights)
+
+
+def load_from_url():
+    params = st.experimental_get_query_params()
+    tickers = params.get("tickers", [""])[0]
+    weights = params.get("weights", [""])[0]
+
+    positions = []
+
+    if tickers.strip() != "":
+        tick_list = tickers.split(",")
+        weight_list = [float(w) for w in weights.split(",")]
+
+        for t, w in zip(tick_list, weight_list):
+            positions.append({"ticker": t.strip(), "weight": w})
+
+    return positions
+
 
 # -----------------------------------------
-# Browser-based persistent storage
+# Initialize portfolio
 # -----------------------------------------
-storage = BrowserStorage(key="m2_tracker_storage")   # unique key for the app
+if "initialized" not in st.session_state:
+    st.session_state.positions = load_from_url()
+    st.session_state.initialized = True
 
-
-# -----------------------------------------
-# Initialize user-specific portfolio
-# -----------------------------------------
-saved_positions = storage.get("positions")
-
-if "positions" not in st.session_state:
-    st.session_state.positions = saved_positions if saved_positions else []
-
-# Keep benchmark saved too
-saved_bench = storage.get("benchmark")
 if "benchmark" not in st.session_state:
-    st.session_state.benchmark = saved_bench if saved_bench else "IWRD.L"
+    st.session_state.benchmark = "IWRD.L"
 
 
 # -----------------------------------------
 # INPUT SECTION
 # -----------------------------------------
-st.subheader("Your Portfolio")
+st.subheader("Your Portfolio (Saved in URL – Private Per User)")
 
 ticker = st.text_input("Add ticker (e.g., AAPL)", "")
 weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
@@ -44,7 +58,7 @@ if st.button("Add position"):
             "ticker": ticker.upper(),
             "weight": weight
         })
-        storage.set("positions", st.session_state.positions)  # save persistently
+        save_to_url()
         st.success(f"Added {ticker.upper()}")
     else:
         st.error("Please enter a ticker.")
@@ -58,21 +72,20 @@ else:
     st.info("No tickers added yet.")
 
 
-# Remove position
+# Remove ticker
 remove_ticker = st.text_input("Remove ticker")
 if st.button("Remove"):
     st.session_state.positions = [
         p for p in st.session_state.positions if p["ticker"] != remove_ticker.upper()
     ]
-    storage.set("positions", st.session_state.positions)  # save persistently
+    save_to_url()
     st.success(f"Removed {remove_ticker.upper()}")
 
 
 # Benchmark
 st.subheader("Benchmark")
-benchmark = st.text_input("Benchmark ticker", st.session_state.benchmark)
+benchmark = st.text_input("Benchmark ticker (IWRD.L is used by B&R)", st.session_state.benchmark)
 st.session_state.benchmark = benchmark
-storage.set("benchmark", benchmark)  # save persistently
 
 
 # Start date
@@ -169,12 +182,13 @@ if run:
 
 
 # -----------------------------------------
-# Reset button
+# Reset (clears portfolio)
 # -----------------------------------------
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
-    storage.set("positions", [])
+    save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
