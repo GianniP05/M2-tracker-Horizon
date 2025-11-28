@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="M² Portfolio Tracker for Horizon Capital", layout="centered")
-st.title("📈 M² Portfolio Tracker")
+st.set_page_config(page_title="M² Portfolio Tracker", layout="centered")
+st.title("📈 M² Portfolio Tracker by Horizon Capital")
 
 # -----------------------------------------
 # Initialize user-specific session state
@@ -158,6 +158,7 @@ if run:
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     st.success("Your private portfolio has been reset!")
+
 
 
 
