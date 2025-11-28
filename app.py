@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="M² Portfolio Tracker", layout="centered")
-st.title("📈 M² Portfolio Tracker (Per-User Portfolio)")
+st.set_page_config(page_title="M² Portfolio Tracker for Horizon Capital", layout="centered")
+st.title("📈 M² Portfolio Tracker")
 
 # -----------------------------------------
 # Initialize user-specific session state
@@ -19,7 +19,7 @@ if "benchmark" not in st.session_state:
 # -----------------------------------------
 # INPUT SECTION
 # -----------------------------------------
-st.subheader("Your Portfolio (Private to You)")
+st.subheader("Your Portfolio")
 
 ticker = st.text_input("Add ticker (e.g., AAPL)", "")
 weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
@@ -158,6 +158,7 @@ if run:
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     st.success("Your private portfolio has been reset!")
+
 
 
 
