@@ -262,7 +262,13 @@ if run:
         min_entry_ts = min(dates_for_min)  # earliest trade date
     else:
         min_entry_ts = pd.to_datetime(start_date)
-
+    # Determine earliest involved date
+    if len(dates_for_min) > 0:
+        download_start = min(dates_for_min)
+    else:
+        st.error("No valid dates found for price download.")
+        st.stop()
+        
     try:
         data = yf.download(all_tickers + [benchmark], start=download_start)["Close"]
     except Exception as e:
@@ -547,6 +553,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
