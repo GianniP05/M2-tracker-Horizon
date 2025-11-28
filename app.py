@@ -68,12 +68,6 @@ if st.button("Add position"):
 # Show starting vs current portfolios
 initial_positions = load_from_url()
 
-st.subheader("📦 Starting Portfolio")
-if len(initial_positions) > 0:
-    st.dataframe(pd.DataFrame(initial_positions))
-else:
-    st.info("No starting portfolio stored in link.")
-
 st.subheader("📊 Current Portfolio")
 if len(st.session_state.positions) > 0:
     st.dataframe(pd.DataFrame(st.session_state.positions))
@@ -225,6 +219,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
