@@ -246,28 +246,28 @@ if run:
 
     # Determine earliest date needed (for any entry or sell, plus start_date)
     # ------------------------------------------------
-# DETERMINE EARLIEST DATE NEEDED (SAFE VERSION)
-# ------------------------------------------------
-dates_for_min = []
-
-# Collect entry/sell dates and convert safely
-for p in st.session_state.positions:
-    dates_for_min.append(pd.to_datetime(p["entry"]))
-
-for tr in st.session_state.trades:
-    dates_for_min.append(pd.to_datetime(tr["entry"]))
-    dates_for_min.append(pd.to_datetime(tr["sell_date"]))
-
-# Determine earliest involved date
-if len(dates_for_min) > 0:
-    min_entry_ts = min(dates_for_min)  # earliest trade date
-else:
-    min_entry_ts = pd.to_datetime(start_date)
-
-start_ts = pd.to_datetime(start_date)
-
-# Final safe comparison
-download_start = min(min_entry_ts, start_ts)
+    # DETERMINE EARLIEST DATE NEEDED (SAFE VERSION)
+    # ------------------------------------------------
+    dates_for_min = []
+    
+    # Collect entry/sell dates and convert safely
+    for p in st.session_state.positions:
+        dates_for_min.append(pd.to_datetime(p["entry"]))
+    
+    for tr in st.session_state.trades:
+        dates_for_min.append(pd.to_datetime(tr["entry"]))
+        dates_for_min.append(pd.to_datetime(tr["sell_date"]))
+    
+    # Determine earliest involved date
+    if len(dates_for_min) > 0:
+        min_entry_ts = min(dates_for_min)  # earliest trade date
+    else:
+        min_entry_ts = pd.to_datetime(start_date)
+    
+    start_ts = pd.to_datetime(start_date)
+    
+    # Final safe comparison
+    download_start = min(min_entry_ts, start_ts)
 
     try:
         data = yf.download(all_tickers + [benchmark], start=download_start)["Close"]
@@ -540,6 +540,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
