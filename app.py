@@ -4,16 +4,30 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="M² Portfolio Tracker", layout="centered")
+from streamlit_browser_storage import BrowserStorage
+
+st.set_page_config(page_title="M² Portfolio Tracker (Research Committee)", layout="centered")
 st.title("📈 M² Portfolio Tracker by Horizon Capital")
 
+
 # -----------------------------------------
-# Initialize user-specific session state
+# Browser-based persistent storage
 # -----------------------------------------
+storage = BrowserStorage(key="m2_tracker_storage")   # unique key for the app
+
+
+# -----------------------------------------
+# Initialize user-specific portfolio
+# -----------------------------------------
+saved_positions = storage.get("positions")
+
 if "positions" not in st.session_state:
-    st.session_state.positions = []     # user's private portfolio
+    st.session_state.positions = saved_positions if saved_positions else []
+
+# Keep benchmark saved too
+saved_bench = storage.get("benchmark")
 if "benchmark" not in st.session_state:
-    st.session_state.benchmark = "IWRD.L"
+    st.session_state.benchmark = saved_bench if saved_bench else "IWRD.L"
 
 
 # -----------------------------------------
@@ -30,12 +44,13 @@ if st.button("Add position"):
             "ticker": ticker.upper(),
             "weight": weight
         })
+        storage.set("positions", st.session_state.positions)  # save persistently
         st.success(f"Added {ticker.upper()}")
     else:
         st.error("Please enter a ticker.")
 
 
-# Show current user portfolio
+# Show portfolio
 if len(st.session_state.positions) > 0:
     st.write("### Current Portfolio")
     st.dataframe(pd.DataFrame(st.session_state.positions))
@@ -47,23 +62,24 @@ else:
 remove_ticker = st.text_input("Remove ticker")
 if st.button("Remove"):
     st.session_state.positions = [
-        p for p in st.session_state.positions
-        if p["ticker"] != remove_ticker.upper()
+        p for p in st.session_state.positions if p["ticker"] != remove_ticker.upper()
     ]
+    storage.set("positions", st.session_state.positions)  # save persistently
     st.success(f"Removed {remove_ticker.upper()}")
 
 
-# Benchmark input
+# Benchmark
 st.subheader("Benchmark")
-benchmark = st.text_input("Benchmark ticker (IWRD.L is the one B&R uses)", st.session_state.benchmark)
+benchmark = st.text_input("Benchmark ticker", st.session_state.benchmark)
 st.session_state.benchmark = benchmark
+storage.set("benchmark", benchmark)  # save persistently
 
 
 # Start date
 start_date = st.date_input("Start date", value=pd.to_datetime("2020-01-01"))
 
 
-# Compute button
+# Compute performance
 run = st.button("Compute Performance")
 
 
@@ -86,7 +102,7 @@ if run:
 
     weights = weights / weights.sum()
 
-    # Download data
+    # Download market data
     try:
         data = yf.download(tickers + [benchmark], start=start_date)["Close"]
     except Exception as e:
@@ -114,9 +130,9 @@ if run:
         st.stop()
 
     # Risk-free rate
-    rf = 0.05 / 252   # 5% annual
+    rf = 0.05 / 252
 
-    # Annualized stats
+    # Annualized statistics
     Rp = port_ret.mean() * 252
     Rb = bench_ret.mean() * 252
     sig_p = port_ret.std() * np.sqrt(252)
@@ -141,7 +157,7 @@ if run:
     cum_p = (1 + port_ret).cumprod()
     cum_b = (1 + bench_ret).cumprod()
 
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(15, 7))
     ax.plot(cum_p, label="Portfolio")
     ax.plot(cum_b, label="Benchmark")
     ax.legend()
@@ -153,11 +169,12 @@ if run:
 
 
 # -----------------------------------------
-# Reset portfolio button
+# Reset button
 # -----------------------------------------
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
-    st.success("Your private portfolio has been reset!")
+    storage.set("positions", [])
+    st.success("Your portfolio has been reset.")
 
 
 
