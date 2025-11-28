@@ -138,11 +138,11 @@ with col_left:
 st.subheader("📉 Sell a Position")
 
 st.markdown("""
-**How selling works (very clear):**
+**How selling works:**
 - You pick the **ticker** you want to sell.  
 - You pick the **entry date** that matches the exact trade you want to close.  
 - You pick the **sell date**, which is the day you exited the position.  
-- The system removes ONLY that position (not all positions of that ticker).  
+- The system removes ONLY that position.  
 """)
 
 if len(st.session_state.positions) > 0:
@@ -350,6 +350,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
