@@ -449,8 +449,18 @@ if run:
         st.session_state.force_run = False
         st.stop()
 
-    Rp = port_ret.mean() * 252
-    Rb = bench_ret2.mean() * 252
+    # Use number of days in the evaluated period
+    num_days = len(port_value)
+    
+    # Total cumulative return over the entire period
+    total_return = port_value.iloc[-1] / port_value.iloc[0] - 1
+    total_bench_return = bench_value.iloc[-1] / bench_value.iloc[0] - 1
+    
+    # Correct annualization using geometric method
+    Rp = (1 + total_return)**(252 / num_days) - 1
+    Rb = (1 + total_bench_return)**(252 / num_days) - 1
+    
+    # Volatilities still use daily std annualized
     sig_p = port_ret.std() * np.sqrt(252)
     sig_b = bench_ret2.std() * np.sqrt(252)
 
@@ -553,6 +563,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
