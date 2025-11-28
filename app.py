@@ -47,7 +47,7 @@ if "benchmark" not in st.session_state:
 # -----------------------------------------
 # INPUT SECTION
 # -----------------------------------------
-st.subheader("Your Portfolio (Saved in URL – Private Per User)")
+st.subheader("Your Portfolio")
 
 ticker = st.text_input("Add ticker (e.g., AAPL)", "")
 weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
@@ -188,6 +188,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
