@@ -190,7 +190,7 @@ with col_left:
                     f"Marked {sell_ticker} (entered {sell_entry_date}) as sold on {sell_date}. "
                     "Metrics and graph will be recomputed."
                 )
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Could not find that exact position. Double-check the entry date.")
     else:
@@ -553,6 +553,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
