@@ -4,27 +4,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 # ------------------------------------------------
 # QUANT UI STYLE
 # ------------------------------------------------
 st.set_page_config(page_title="M² Portfolio Tracker (Research Committee)", layout="wide")
 
-# Inject custom CSS for quant-style look
 st.markdown("""
     <style>
-
-    /* Make page wider */
     .block-container {
         padding-left: 3rem;
         padding-right: 3rem;
     }
-
-    /* Reduce vertical space */
     .element-container {
-        margin-bottom: 0.5rem !important;
+        margin-bottom: 0.4rem !important;
     }
-
-    /* Professional tables */
     table {
         border-collapse: collapse;
         width: 100%;
@@ -37,24 +31,21 @@ st.markdown("""
     tbody tr:nth-child(even) {
         background-color: #161a23 !important;
     }
-
-    /* Clean metric display */
     .metric-container .metric-value {
         font-weight: 600 !important;
     }
-
-    /* Section headers */
     h2, h3, h4 {
         margin-top: 0.2rem !important;
     }
-
     </style>
 """, unsafe_allow_html=True)
+
 
 # ------------------------------------------------
 # TITLE
 # ------------------------------------------------
 st.title("📈 M² Portfolio Tracker by Horizon Capital")
+
 
 # ------------------------------------------------
 # URL STORAGE HELPERS
@@ -62,20 +53,28 @@ st.title("📈 M² Portfolio Tracker by Horizon Capital")
 def save_to_url():
     tickers = ",".join([p["ticker"] for p in st.session_state.positions])
     weights = ",".join([str(p["weight"]) for p in st.session_state.positions])
-    st.experimental_set_query_params(tickers=tickers, weights=weights)
+    entries = ",".join([p["entry"] for p in st.session_state.positions])
+    st.experimental_set_query_params(tickers=tickers, weights=weights, entries=entries)
 
 
 def load_from_url():
     params = st.experimental_get_query_params()
+
     tickers = params.get("tickers", [""])[0]
     weights = params.get("weights", [""])[0]
+    entries = params.get("entries", [""])[0]
+
     positions = []
     if tickers.strip() != "":
-        tick_list = tickers.split(",")
-        weight_list = [float(w) for w in weights.split(",")]
-        for t, w in zip(tick_list, weight_list):
-            positions.append({"ticker": t.strip(), "weight": w})
+        t_list = tickers.split(",")
+        w_list = [float(w) for w in weights.split(",")]
+        e_list = entries.split(",")
+
+        for t, w, e in zip(t_list, w_list, e_list):
+            positions.append({"ticker": t, "weight": w, "entry": e})
+
     return positions
+
 
 # ------------------------------------------------
 # INITIALIZATION
@@ -87,22 +86,26 @@ if "initialized" not in st.session_state:
 if "benchmark" not in st.session_state:
     st.session_state.benchmark = "IWRD.L"
 
+
 # ------------------------------------------------
-# LAYOUT ORGANIZATION
+# LAYOUT (LEFT = PORTFOLIO / RIGHT = SETTINGS)
 # ------------------------------------------------
 col_left, col_right = st.columns([1.5, 1])
+
 
 with col_left:
     st.subheader("Your Portfolio")
 
-    ticker = st.text_input("Add ticker (e.g., AAPL)", "")
+    ticker = st.text_input("Add ticker (e.g., AAPL)")
     weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
+    entry_date = st.date_input("Entry date of this position")
 
     if st.button("Add position"):
         if ticker.strip() != "":
             st.session_state.positions.append({
                 "ticker": ticker.upper(),
-                "weight": weight
+                "weight": weight,
+                "entry": str(entry_date)
             })
             save_to_url()
             st.success(f"Added {ticker.upper()}")
@@ -111,7 +114,13 @@ with col_left:
 
     st.subheader("📊 Current Portfolio")
     if len(st.session_state.positions) > 0:
-        st.dataframe(pd.DataFrame(st.session_state.positions))
+        df = pd.DataFrame(st.session_state.positions)
+        df_display = df.rename(columns={
+            "ticker": "Ticker",
+            "weight": "Target Weight",
+            "entry": "Entry Date"
+        })
+        st.dataframe(df_display)
     else:
         st.info("Your current portfolio is empty.")
 
@@ -147,7 +156,7 @@ with col_right:
 if run:
 
     if len(st.session_state.positions) == 0:
-        st.error("Add at least one position to compute performance.")
+        st.error("Add at least one position.")
         st.stop()
 
     tickers = [p["ticker"] for p in st.session_state.positions]
@@ -159,39 +168,65 @@ if run:
 
     weights = weights / weights.sum()
 
+    # Use earliest entry date in portfolio
+    min_entry_date = min(pd.to_datetime(p["entry"]) for p in st.session_state.positions)
+
     try:
-        data = yf.download(tickers + [benchmark], start=start_date)["Close"]
+        data = yf.download(tickers + [benchmark], start=min_entry_date)["Close"]
     except Exception as e:
         st.error(f"Error downloading data: {e}")
         st.stop()
 
     if data is None or data.empty:
-        st.error("No market data returned.")
+        st.error("No price data returned.")
         st.stop()
 
     rets = data.pct_change().dropna()
-
-    if rets.empty or len(rets) < 2:
-        st.error("Not enough data to compute returns.")
+    if rets.empty:
+        st.error("Not enough price history.")
         st.stop()
 
-    port_ret = rets[tickers] @ weights
+    # ------------------------------------------------
+    # POSITION-BASED RETURNS (STAGGERED ENTRIES)
+    # ------------------------------------------------
+    aligned_port_rets = []
+
+    for p in st.session_state.positions:
+        t = p["ticker"]
+        w = p["weight"]
+        e = pd.to_datetime(p["entry"])
+
+        sliced = rets.loc[rets.index >= e, t]
+        aligned_port_rets.append(sliced * w)
+
+    aligned_df = pd.concat(aligned_port_rets, axis=1).fillna(0)
+    port_ret = aligned_df.sum(axis=1)
 
     try:
         bench_ret = rets[benchmark]
     except KeyError:
-        st.error("Benchmark ticker not found.")
+        st.error("Benchmark not found.")
         st.stop()
 
+    # ------------------------------------------------
+    # ANNUALIZATION + M2
+    # ------------------------------------------------
     rf = 0.05 / 252
-
     Rp = port_ret.mean() * 252
     Rb = bench_ret.mean() * 252
     sig_p = port_ret.std() * np.sqrt(252)
     sig_b = bench_ret.std() * np.sqrt(252)
+
+    if sig_p == 0:
+        st.error("Portfolio volatility is zero.")
+        st.stop()
+
     sharpe = (Rp - 0.05) / sig_p
     M2 = sharpe * sig_b + 0.05
 
+    # ------------------------------------------------
+    # REAL MONEY PORTFOLIO VALUE
+    # ------------------------------------------------
     cum_p = (1 + port_ret).cumprod()
     cum_b = (1 + bench_ret).cumprod()
 
@@ -203,23 +238,39 @@ if run:
     absolute_return = (current_value / starting_value) - 1
 
     # ------------------------------------------------
-    # RESULTS DISPLAY
+    # MONEY WEIGHTS PER POSITION (€)
+    # ------------------------------------------------
+    money_weights = {}
+    for p in st.session_state.positions:
+        t = p["ticker"]
+        w = p["weight"]
+        e = pd.to_datetime(p["entry"])
+
+        indiv_cum = (1 + rets.loc[rets.index >= e, t]).cumprod()
+        indiv_val = float(indiv_cum.iloc[-1] * starting_value * w)
+
+        money_weights[t] = indiv_val
+
+    st.subheader("💰 Current Money Weights (€)")
+    st.dataframe(pd.DataFrame.from_dict(money_weights, orient='index', columns=["Value (€)"]))
+
+    # ------------------------------------------------
+    # DISPLAY RESULTS
     # ------------------------------------------------
     st.subheader("💶 Portfolio Results (Real Money)")
-
-    colA, colB, colC = st.columns(3)
-    colA.metric("Starting Value", f"€{starting_value:,.2f}")
-    colB.metric("Current Value", f"€{current_value:,.2f}", f"{absolute_return:.2%}")
-    colC.metric("Profit / Loss", f"€{profit:,.2f}")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Starting Value", f"€{starting_value:,.2f}")
+    c2.metric("Current Value", f"€{current_value:,.2f}", f"{absolute_return:.2%}")
+    c3.metric("Profit / Loss", f"€{profit:,.2f}")
 
     st.subheader("📈 Risk-Adjusted Metrics")
-    colX, colY, colZ = st.columns(3)
-    colX.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
-    colY.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
-    colZ.metric("M²", f"{M2:.2%}")
+    r1, r2, r3 = st.columns(3)
+    r1.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
+    r2.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
+    r3.metric("M²", f"{M2:.2%}")
 
     # ------------------------------------------------
-    # CHART (unchanged look)
+    # CHART (UNCHANGED LOOK)
     # ------------------------------------------------
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(port_value, label="Portfolio (€)")
@@ -230,15 +281,14 @@ if run:
     ax.set_ylabel("Value (€)")
     st.pyplot(fig)
 
-# Reset button
+
+# ------------------------------------------------
+# RESET BUTTON
+# ------------------------------------------------
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
-
-
-
-
 
 
 
