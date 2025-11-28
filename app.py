@@ -88,7 +88,7 @@ if run:
 
     # Download data
     try:
-        data = yf.download(tickers + [benchmark], start=start_date)["Adj Close"]
+        data = yf.download(tickers + [benchmark], start=start_date)["Close"]
     except Exception as e:
         st.error(f"Error downloading data: {e}")
         st.stop()
@@ -158,4 +158,5 @@ if run:
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     st.success("Your private portfolio has been reset!")
+
 
