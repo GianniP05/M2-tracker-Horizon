@@ -132,6 +132,67 @@ with col_left:
         save_to_url()
         st.success(f"Removed {remove_ticker.upper()}")
 
+    # ------------------------------------------------
+# SELL A POSITION (EXTREMELY CLEAR)
+# ------------------------------------------------
+st.subheader("📉 Sell a Position")
+
+st.markdown("""
+**How selling works (very clear):**
+- You pick the **ticker** you want to sell.  
+- You pick the **entry date** that matches the exact trade you want to close.  
+- You pick the **sell date**, which is the day you exited the position.  
+- The system removes ONLY that position (not all positions of that ticker).  
+""")
+
+if len(st.session_state.positions) > 0:
+
+    # Dropdown of tickers in portfolio
+    sell_ticker = st.selectbox(
+        "Select ticker to sell",
+        sorted(list({p["ticker"] for p in st.session_state.positions}))
+    )
+
+    # Filter entry dates for that ticker
+    matching_entries = sorted(
+        [p["entry"] for p in st.session_state.positions if p["ticker"] == sell_ticker]
+    )
+
+    sell_entry_date = st.selectbox(
+        "Select the entry date of the position you want to sell",
+        matching_entries
+    )
+
+    sell_date = st.date_input(
+        "Select the date you sold this position"
+    )
+
+    if st.button("Sell Position"):
+        before_count = len(st.session_state.positions)
+
+        # Remove only the matching position
+        st.session_state.positions = [
+            p for p in st.session_state.positions
+            if not (p["ticker"] == sell_ticker and p["entry"] == sell_entry_date)
+        ]
+
+        save_to_url()
+
+        after_count = len(st.session_state.positions)
+
+        if after_count < before_count:
+            st.success(
+                f"Sold {sell_ticker} (entered on {sell_entry_date}) on {sell_date}. "
+                "The position has now been removed from your portfolio."
+            )
+        else:
+            st.error(
+                "No position was removed. Double-check the entry date."
+            )
+
+else:
+    st.info("You must add positions before you can sell them.")
+
 
 with col_right:
     st.subheader("Benchmark")
@@ -289,6 +350,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
