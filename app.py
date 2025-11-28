@@ -55,7 +55,7 @@ if st.button("Remove"):
 
 # Benchmark input
 st.subheader("Benchmark")
-benchmark = st.text_input("Benchmark ticker", st.session_state.benchmark)
+benchmark = st.text_input("Benchmark ticker (IWRD.L is the one B&R uses)", st.session_state.benchmark)
 st.session_state.benchmark = benchmark
 
 
@@ -158,6 +158,7 @@ if run:
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     st.success("Your private portfolio has been reset!")
+
 
 
 
