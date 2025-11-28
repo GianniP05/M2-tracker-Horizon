@@ -64,12 +64,25 @@ if st.button("Add position"):
         st.error("Please enter a ticker.")
 
 
-# Show portfolio
+# -----------------------------------------
+# STARTING VS CURRENT PORTFOLIO
+# -----------------------------------------
+
+# Load initial portfolio from URL (never changes during the session)
+initial_positions = load_from_url()
+
+st.subheader("📦 Starting Portfolio (loaded from URL)")
+if len(initial_positions) > 0:
+    st.dataframe(pd.DataFrame(initial_positions))
+else:
+    st.info("No starting portfolio stored in the URL.")
+
+st.subheader("📊 Current Portfolio (after edits)")
 if len(st.session_state.positions) > 0:
-    st.write("### Current Portfolio")
     st.dataframe(pd.DataFrame(st.session_state.positions))
 else:
-    st.info("No tickers added yet.")
+    st.info("Your current portfolio is empty.")
+
 
 
 # Remove ticker
@@ -188,6 +201,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
