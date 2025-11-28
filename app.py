@@ -13,7 +13,7 @@ st.title("📈 M² Portfolio Tracker (Per-User Portfolio)")
 if "positions" not in st.session_state:
     st.session_state.positions = []     # user's private portfolio
 if "benchmark" not in st.session_state:
-    st.session_state.benchmark = "^GSPC"
+    st.session_state.benchmark = "IWRD.L"
 
 
 # -----------------------------------------
@@ -158,5 +158,6 @@ if run:
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     st.success("Your private portfolio has been reset!")
+
 
 
