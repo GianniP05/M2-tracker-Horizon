@@ -218,7 +218,6 @@ with col_right:
         step=100.0
     )
 
-    start_date = st.date_input("Start date for performance evaluation", value=pd.to_datetime("2020-01-01"))
 
     run_button = st.button("Compute Performance")
 
@@ -553,6 +552,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
