@@ -410,10 +410,9 @@ if run:
     portfolio_value_series = cash_series + invested_series
 
     # ------------------------------------------------
-    # PORTFOLIO SHOULD START AT FIRST TRADE DATE
+    # PORTFOLIO STARTS AT FIRST TRADE DATE
     # ------------------------------------------------
     
-    # earliest date among open entries and closed entries
     all_trade_dates = []
     
     for p in st.session_state.positions:
@@ -423,29 +422,21 @@ if run:
         all_trade_dates.append(pd.to_datetime(tr["entry"]))
         all_trade_dates.append(pd.to_datetime(tr["sell_date"]))
     
-    if len(all_trade_dates) > 0:
-        first_trade_date = min(all_trade_dates)
-    else:
+    if len(all_trade_dates) == 0:
         st.error("No trades found to determine portfolio start.")
         st.stop()
     
-    # Trim portfolio series to start at the first trade
+    first_trade_date = min(all_trade_dates)
+    
+    # Portfolio filtered from first trade date
     port_value = portfolio_value_series[portfolio_value_series.index >= first_trade_date]
     
-    # Trim benchmark equally
-    bench_value = bench_value[bench_value.index >= first_trade_date]
-
-    if len(port_value) < 2:
-        st.error("Not enough data after the selected start date to compute performance.")
-        st.session_state.force_run = False
-        st.stop()
-
-    # Benchmark value series
-    bench_ret = rets[benchmark].loc[mask]
+    # Benchmark filtered from the same date
+    bench_ret = rets[benchmark].loc[rets.index >= first_trade_date]
     bench_cum = (1 + bench_ret).cumprod()
     bench_value = starting_value * bench_cum
-
-    # Daily returns from value series
+    
+    # Daily returns
     port_ret = port_value.pct_change().dropna()
     bench_ret2 = bench_value.pct_change().dropna()
 
@@ -562,6 +553,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
