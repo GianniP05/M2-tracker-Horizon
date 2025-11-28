@@ -1,6 +1,6 @@
 streamlit
-streamlit-browser-storage
 yfinance
 pandas
 numpy
 matplotlib
+
