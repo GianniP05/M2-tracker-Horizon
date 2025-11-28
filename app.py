@@ -410,7 +410,8 @@ if run:
     portfolio_value_series = cash_series + invested_series
 
     # Restrict to user-chosen evaluation window
-    mask = portfolio_value_series.index >= start_date
+    start_ts = pd.to_datetime(start_date)
+    mask = portfolio_value_series.index >= start_ts
     port_value = portfolio_value_series[mask]
 
     if len(port_value) < 2:
@@ -540,6 +541,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
