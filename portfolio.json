@@ -1,0 +1,14 @@
+[
+    {
+        "ticker": "META",
+        "weight": 0.2
+    },
+    {
+        "ticker": "QQQ",
+        "weight": 0.2
+    },
+    {
+        "ticker": "BTC-USD",
+        "weight": 0.2
+    }
+]
