@@ -4,9 +4,57 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="M² Portfolio Tracker (Research Committee)", layout="centered")
-st.title("📈 M² Portfolio Tracker by Horizon Capital")
+# ------------------------------------------------
+# QUANT UI STYLE
+# ------------------------------------------------
+st.set_page_config(page_title="M² Portfolio Tracker (Research Committee)", layout="wide")
 
+# Inject custom CSS for quant-style look
+st.markdown("""
+    <style>
+
+    /* Make page wider */
+    .block-container {
+        padding-left: 3rem;
+        padding-right: 3rem;
+    }
+
+    /* Reduce vertical space */
+    .element-container {
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Professional tables */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    thead th {
+        background-color: #0e1117 !important;
+        color: white !important;
+        border-bottom: 1px solid #444 !important;
+    }
+    tbody tr:nth-child(even) {
+        background-color: #161a23 !important;
+    }
+
+    /* Clean metric display */
+    .metric-container .metric-value {
+        font-weight: 600 !important;
+    }
+
+    /* Section headers */
+    h2, h3, h4 {
+        margin-top: 0.2rem !important;
+    }
+
+    </style>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------
+# TITLE
+# ------------------------------------------------
+st.title("📈 M² Portfolio Tracker by Horizon Capital")
 
 # ------------------------------------------------
 # URL STORAGE HELPERS
@@ -21,18 +69,13 @@ def load_from_url():
     params = st.experimental_get_query_params()
     tickers = params.get("tickers", [""])[0]
     weights = params.get("weights", [""])[0]
-
     positions = []
-
     if tickers.strip() != "":
         tick_list = tickers.split(",")
         weight_list = [float(w) for w in weights.split(",")]
-
         for t, w in zip(tick_list, weight_list):
             positions.append({"ticker": t.strip(), "weight": w})
-
     return positions
-
 
 # ------------------------------------------------
 # INITIALIZATION
@@ -44,68 +87,58 @@ if "initialized" not in st.session_state:
 if "benchmark" not in st.session_state:
     st.session_state.benchmark = "IWRD.L"
 
-
 # ------------------------------------------------
-# INPUT SECTION
+# LAYOUT ORGANIZATION
 # ------------------------------------------------
-st.subheader("Your Portfolio")
+col_left, col_right = st.columns([1.5, 1])
 
-ticker = st.text_input("Add ticker (e.g., AAPL)", "")
-weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
+with col_left:
+    st.subheader("Your Portfolio")
 
-if st.button("Add position"):
-    if ticker.strip() != "":
-        st.session_state.positions.append({
-            "ticker": ticker.upper(),
-            "weight": weight
-        })
-        save_to_url()
-        st.success(f"Added {ticker.upper()}")
+    ticker = st.text_input("Add ticker (e.g., AAPL)", "")
+    weight = st.number_input("Weight (0–1)", min_value=0.0, max_value=1.0, value=0.1)
+
+    if st.button("Add position"):
+        if ticker.strip() != "":
+            st.session_state.positions.append({
+                "ticker": ticker.upper(),
+                "weight": weight
+            })
+            save_to_url()
+            st.success(f"Added {ticker.upper()}")
+        else:
+            st.error("Please enter a ticker.")
+
+    st.subheader("📊 Current Portfolio")
+    if len(st.session_state.positions) > 0:
+        st.dataframe(pd.DataFrame(st.session_state.positions))
     else:
-        st.error("Please enter a ticker.")
+        st.info("Your current portfolio is empty.")
+
+    remove_ticker = st.text_input("Remove ticker")
+    if st.button("Remove"):
+        st.session_state.positions = [
+            p for p in st.session_state.positions if p["ticker"] != remove_ticker.upper()
+        ]
+        save_to_url()
+        st.success(f"Removed {remove_ticker.upper()}")
 
 
-# Show starting vs current portfolios
-initial_positions = load_from_url()
+with col_right:
+    st.subheader("Benchmark")
+    benchmark = st.text_input("Benchmark ticker (IWRD.L is used in the competition)", st.session_state.benchmark)
+    st.session_state.benchmark = benchmark
 
-st.subheader("📊 Current Portfolio")
-if len(st.session_state.positions) > 0:
-    st.dataframe(pd.DataFrame(st.session_state.positions))
-else:
-    st.info("Your current portfolio is empty.")
+    starting_value = st.number_input(
+        "💰 Starting portfolio value (€)",
+        min_value=0.0,
+        value=10000.0,
+        step=100.0
+    )
 
+    start_date = st.date_input("Start date", value=pd.to_datetime("2020-01-01"))
 
-# Remove ticker
-remove_ticker = st.text_input("Remove ticker")
-if st.button("Remove"):
-    st.session_state.positions = [
-        p for p in st.session_state.positions if p["ticker"] != remove_ticker.upper()
-    ]
-    save_to_url()
-    st.success(f"Removed {remove_ticker.upper()}")
-
-
-# Benchmark
-st.subheader("Benchmark")
-benchmark = st.text_input("Benchmark ticker (IWRD.L is used in the competition)", st.session_state.benchmark)
-st.session_state.benchmark = benchmark
-
-
-# Starting portfolio value in €
-starting_value = st.number_input(
-    "💰 Starting portfolio value (€)",
-    min_value=0.0,
-    value=10000.0,
-    step=100.0
-)
-
-
-# Start date
-start_date = st.date_input("Start date", value=pd.to_datetime("2020-01-01"))
-
-
-# Compute performance
-run = st.button("Compute Performance")
+    run = st.button("Compute Performance")
 
 
 # ------------------------------------------------
@@ -120,14 +153,12 @@ if run:
     tickers = [p["ticker"] for p in st.session_state.positions]
     weights = np.array([p["weight"] for p in st.session_state.positions])
 
-    # Normalize weights
     if weights.sum() == 0:
         st.error("Total weight cannot be zero.")
         st.stop()
 
     weights = weights / weights.sum()
 
-    # Download market data
     try:
         data = yf.download(tickers + [benchmark], start=start_date)["Close"]
     except Exception as e:
@@ -135,44 +166,32 @@ if run:
         st.stop()
 
     if data is None or data.empty:
-        st.error("No market data returned. Check ticker symbols or start date.")
+        st.error("No market data returned.")
         st.stop()
 
     rets = data.pct_change().dropna()
 
     if rets.empty or len(rets) < 2:
-        st.error("Not enough data to compute returns. Try an earlier start date.")
+        st.error("Not enough data to compute returns.")
         st.stop()
 
-    # Portfolio returns
     port_ret = rets[tickers] @ weights
 
-    # Benchmark returns
     try:
         bench_ret = rets[benchmark]
     except KeyError:
-        st.error("Benchmark ticker not found in downloaded data.")
+        st.error("Benchmark ticker not found.")
         st.stop()
 
-    # Risk-free rate
     rf = 0.05 / 252
 
-    # Annualized statistics
     Rp = port_ret.mean() * 252
     Rb = bench_ret.mean() * 252
     sig_p = port_ret.std() * np.sqrt(252)
     sig_b = bench_ret.std() * np.sqrt(252)
-
-    if sig_p == 0:
-        st.error("Portfolio volatility is zero — cannot compute M².")
-        st.stop()
-
     sharpe = (Rp - 0.05) / sig_p
     M2 = sharpe * sig_b + 0.05
 
-    # --------------------------------------
-    # Real Money Calculations
-    # --------------------------------------
     cum_p = (1 + port_ret).cumprod()
     cum_b = (1 + bench_ret).cumprod()
 
@@ -183,26 +202,26 @@ if run:
     profit = current_value - starting_value
     absolute_return = (current_value / starting_value) - 1
 
-    # --------------------------------------
-    # DISPLAY RESULTS
-    # --------------------------------------
+    # ------------------------------------------------
+    # RESULTS DISPLAY
+    # ------------------------------------------------
     st.subheader("💶 Portfolio Results (Real Money)")
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Starting Value", f"€{starting_value:,.2f}")
-    col2.metric("Current Value", f"€{current_value:,.2f}", f"{absolute_return:.2%}")
-    col3.metric("Profit / Loss", f"€{profit:,.2f}")
+    colA, colB, colC = st.columns(3)
+    colA.metric("Starting Value", f"€{starting_value:,.2f}")
+    colB.metric("Current Value", f"€{current_value:,.2f}", f"{absolute_return:.2%}")
+    colC.metric("Profit / Loss", f"€{profit:,.2f}")
 
     st.subheader("📈 Risk-Adjusted Metrics")
-    colA, colB, colC = st.columns(3)
-    colA.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
-    colB.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
-    colC.metric("M²", f"{M2:.2%}")
+    colX, colY, colZ = st.columns(3)
+    colX.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
+    colY.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
+    colZ.metric("M²", f"{M2:.2%}")
 
-    # --------------------------------------
-    # PLOT (REAL MONEY)
-    # --------------------------------------
-    fig, ax = plt.subplots(figsize=(10, 4))
+    # ------------------------------------------------
+    # CHART (unchanged look)
+    # ------------------------------------------------
+    fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(port_value, label="Portfolio (€)")
     ax.plot(bench_value, label="Benchmark (€)")
     ax.legend()
@@ -211,14 +230,12 @@ if run:
     ax.set_ylabel("Value (€)")
     st.pyplot(fig)
 
-
-# ------------------------------------------------
-# RESET BUTTON
-# ------------------------------------------------
+# Reset button
 if st.button("Reset My Portfolio"):
     st.session_state.positions = []
     save_to_url()
     st.success("Your portfolio has been reset.")
+
 
 
 
