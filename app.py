@@ -573,7 +573,7 @@ if run:
         entry_date = info["entry_idx"]
         if entry_date in port_value.index:
             ax.scatter(entry_date, port_value.loc[entry_date],
-                       marker="^", color="green", s=120, label="Buy" if "Buy" not in ax.get_legend_handles_labels()[1] else "")
+                       marker="^", color="green", s=80, label="Buy" if "Buy" not in ax.get_legend_handles_labels()[1] else "")
     
     # Plot markers for CLOSED trades
     for info in trade_infos:
@@ -582,11 +582,11 @@ if run:
     
         if entry_date in port_value.index:
             ax.scatter(entry_date, port_value.loc[entry_date],
-                       marker="^", color="green", s=120, label="Buy" if "Buy" not in ax.get_legend_handles_labels()[1] else "")
+                       marker="^", color="green", s=80, label="Buy" if "Buy" not in ax.get_legend_handles_labels()[1] else "")
     
         if sell_date in port_value.index:
             ax.scatter(sell_date, port_value.loc[sell_date],
-                       marker="v", color="red", s=120, label="Sell" if "Sell" not in ax.get_legend_handles_labels()[1] else "")
+                       marker="v", color="red", s=80, label="Sell" if "Sell" not in ax.get_legend_handles_labels()[1] else "")
 
     ax.legend()
     ax.set_title("Portfolio Value Over Time (€)")
@@ -604,6 +604,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
