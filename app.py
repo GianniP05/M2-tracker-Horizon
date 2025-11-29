@@ -533,23 +533,34 @@ if run:
     
     st.metric("Max Drawdown", f"{max_dd:.2%}")
 
+    # ---------------------------
+    # MONEY WEIGHTS + PIE CHART (SIDE BY SIDE)
+    # ---------------------------
+    
     st.subheader("💰 Current Money Weights (€)")
-    mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
-    st.dataframe(mw_df)
+    
+    col_mw, col_pie = st.columns([1.2, 1])   # table bigger than pie chart
+    
+    with col_mw:
+        mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
+        st.dataframe(mw_df)
+    
+    with col_pie:
+        st.write("")  # spacing
+        st.subheader("📊 Allocation")
+        
+        fig2, ax2 = plt.subplots(figsize=(4.5, 4.5))  # well-balanced size
+        labels = list(money_weights.keys())
+        values = list(money_weights.values())
+    
+        ax2.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+        ax2.axis("equal")
+    
+        st.pyplot(fig2)
+        st.write(" ")
+        st.write(" ")
 
-    # ---------------------------
-    # ALLOCATION PIE CHART
-    # ---------------------------
-    st.subheader("📊 Allocation Pie Chart")
-    
-    fig2, ax2 = plt.subplots(figsize=(6, 6))
-    labels = list(money_weights.keys())
-    values = list(money_weights.values())
-    
-    ax2.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-    ax2.axis("equal")
-    
-    st.pyplot(fig2)
+
 
 
     # ------------------------------------------------
@@ -619,6 +630,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
