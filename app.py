@@ -539,45 +539,11 @@ if run:
     st.subheader("💰 Current Money Weights (€)")
     
     # Force alignment using columns
-    col_mw, col_pie = st.columns([1.2, 1], vertical_alignment="top")
+    col_mw = st.columns(1.2, vertical_alignment="top")
     
     with col_mw:
         mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
         st.dataframe(mw_df, use_container_width=True)
-    
-    with col_pie:
-        st.subheader("📊 Allocation")
-    
-        labels = list(money_weights.keys())
-        values = list(money_weights.values())
-    
-        colors = ["#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F", "#EDC948"]
-    
-        fig2, ax2 = plt.subplots(figsize=(5.5, 5.5))  # wider so labels fit
-    
-        wedges, texts, autotexts = ax2.pie(
-            values,
-            labels=labels,
-            autopct="%1.1f%%",
-            startangle=90,
-            colors=colors,
-            pctdistance=0.80,          # shift % inside
-            labeldistance=1.1,         # shift labels OUTSIDE the chart
-            textprops={'color': 'white', 'weight': 'bold', 'fontsize': 11}
-        )
-    
-        # Modern donut center
-        centre_circle = plt.Circle((0, 0), 0.50, color='black', fc='black')
-        fig2.gca().add_artist(centre_circle)
-    
-        ax2.axis('equal')
-    
-        # Adjust label text style
-        plt.setp(texts, color='white', fontsize=11)
-        plt.setp(autotexts, size=10, weight='bold')
-    
-        st.pyplot(fig2)
-
 
       
     # ------------------------------------------------
@@ -647,6 +613,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
