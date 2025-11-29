@@ -557,12 +557,7 @@ if run:
         ax2.axis("equal")
     
         st.pyplot(fig2)
-        st.write(" ")
-        st.write(" ")
-
-
-
-
+      
     # ------------------------------------------------
     # SOLD POSITIONS LOG (WITH PnL)
     # ------------------------------------------------
@@ -630,6 +625,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
