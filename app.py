@@ -431,7 +431,7 @@ if run:
     first_trade_date = min(all_trade_dates)
     
     # Portfolio filtered from first trade date
-    port_value = portfolio_value_series[portfolio_value_series.index >= first_trade_date]
+    port_value = portfolio_value_series[portfolio_value_series.index > first_trade_date]
     
     # Benchmark filtered from the same date
     bench_ret = rets[benchmark].loc[rets.index >= first_trade_date]
@@ -565,6 +565,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
