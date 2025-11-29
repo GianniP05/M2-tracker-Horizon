@@ -211,12 +211,19 @@ with col_right:
     benchmark = st.text_input("Benchmark ticker (IWRD.L is used in the competition)", st.session_state.benchmark)
     st.session_state.benchmark = benchmark
 
+    # Persist starting_value in session_state
+    if "starting_value" not in st.session_state:
+        st.session_state.starting_value = 5000.0   # default only ON FIRST RUN
+    
     starting_value = st.number_input(
         "💰 Starting portfolio value (€)",
         min_value=0.0,
-        value=10000.0,
+        value=st.session_state.starting_value,
         step=100.0
     )
+    
+    # Save (persist) the value so it doesn't reset when Streamlit reruns
+    st.session_state.starting_value = starting_value
 
 
     run_button = st.button("Compute Performance")
@@ -565,6 +572,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
