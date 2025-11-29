@@ -397,7 +397,7 @@ if run:
 
         # Closed trades: active only between entry and sell date
         for info in trade_infos:
-            if info["entry_idx"] <= d <= info["sell_idx"]:
+            if info["entry_idx"] <= d < info["sell_idx"]:
                 if d in info["cum"].index:
                     factor = info["cum"].loc[d]
                 else:
@@ -563,6 +563,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
