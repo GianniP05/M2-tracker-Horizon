@@ -537,15 +537,8 @@ if run:
     # MONEY WEIGHTS + ALLOCATION CHART (SIDE-BY-SIDE, FIXED ALIGNMENT)
     # -----------------------------
     st.subheader("💰 Current Money Weights (€)")
-    
-    # Force alignment using columns
-    col_mw = st.columns(1.2, vertical_alignment="top")
-    
-    with col_mw:
-        mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
-        st.dataframe(mw_df, use_container_width=True)
+    st.dataframe(pd.DataFrame.from_dict(money_weights, orient='index', columns=["Value (€)"]))
 
-      
     # ------------------------------------------------
     # SOLD POSITIONS LOG (WITH PnL)
     # ------------------------------------------------
@@ -613,6 +606,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
