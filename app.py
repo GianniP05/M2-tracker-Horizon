@@ -537,6 +537,21 @@ if run:
     mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
     st.dataframe(mw_df)
 
+    # ---------------------------
+    # ALLOCATION PIE CHART
+    # ---------------------------
+    st.subheader("📊 Allocation Pie Chart")
+    
+    fig2, ax2 = plt.subplots(figsize=(6, 6))
+    labels = list(money_weights.keys())
+    values = list(money_weights.values())
+    
+    ax2.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
+    ax2.axis("equal")
+    
+    st.pyplot(fig2)
+
+
     # ------------------------------------------------
     # SOLD POSITIONS LOG (WITH PnL)
     # ------------------------------------------------
@@ -604,6 +619,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
