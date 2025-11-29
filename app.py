@@ -361,51 +361,53 @@ if run:
         })
 
     # ------------------------------------------------
-    # BUILD CASH & INVESTED SERIES OVER TIME
+    # BUILD CASH & INVESTED SERIES OVER TIME (CORRECT VERSION)
     # ------------------------------------------------
+    
     cash_series = pd.Series(index=dates, dtype=float)
     invested_series = pd.Series(index=dates, dtype=float)
-
+    
+    # Initialize cash ONCE (correct behavior)
+    cash = starting_value
+    
     for d in dates:
-        # CASH: start with initial capital
-        cash = starting_value
-
-        # Subtract all buy amounts whose entry <= d (open + closed)
+    
+        # ---- 1. Process BUY events happening TODAY ----
         for info in open_infos:
-            if d >= info["entry_idx"]:
+            if d == info["entry_idx"]:
                 cash -= info["amount"]
+    
         for info in trade_infos:
-            if d >= info["entry_idx"]:
+            if d == info["entry_idx"]:
                 cash -= info["amount"]
-
-        # Add all sale values whose sell date <= d
+    
+        # ---- 2. Process SELL events happening TODAY ----
         for info in trade_infos:
-            if d >= info["sell_idx"]:
+            if d == info["sell_idx"]:
                 cash += info["sale_value"]
-
-        # INVESTED: value of active trades at date d
+    
+        # ---- 3. Compute invested value ----
         invested = 0.0
-
-        # Open positions: active from entry onwards
+    
+        # Open positions: active from entry date onward
         for info in open_infos:
             if d >= info["entry_idx"]:
-                if d in info["cum"].index:
-                    factor = info["cum"].loc[d]
-                else:
-                    factor = info["cum"].iloc[-1]
+                factor = info["cum"].loc[d] if d in info["cum"].index else info["cum"].iloc[-1]
                 invested += info["amount"] * factor
-
-        # Closed trades: active only between entry and sell date
+    
+        # Closed positions: active only UNTIL sell date (NOT including)
         for info in trade_infos:
             if info["entry_idx"] <= d < info["sell_idx"]:
-                if d in info["cum"].index:
-                    factor = info["cum"].loc[d]
-                else:
-                    factor = info["cum"].iloc[-1]
+                factor = info["cum"].loc[d] if d in info["cum"].index else info["cum"].iloc[-1]
                 invested += info["amount"] * factor
-
+    
+        # ---- 4. Save values ----
         cash_series.loc[d] = cash
         invested_series.loc[d] = invested
+    
+    # Total portfolio value over time
+    portfolio_value_series = cash_series + invested_series
+
 
     portfolio_value_series = cash_series + invested_series
 
@@ -563,6 +565,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
