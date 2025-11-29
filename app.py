@@ -533,11 +533,13 @@ if run:
     
     st.metric("Max Drawdown", f"{max_dd:.2%}")
 
-   # -----------------------------
-    # MONEY WEIGHTS + ALLOCATION CHART (SIDE-BY-SIDE)
+    # -----------------------------
+    # MONEY WEIGHTS + ALLOCATION CHART (SIDE-BY-SIDE, FIXED ALIGNMENT)
     # -----------------------------
     st.subheader("💰 Current Money Weights (€)")
-    col_mw, col_pie = st.columns([1.2, 1])
+    
+    # Force alignment using columns
+    col_mw, col_pie = st.columns([1.2, 1], vertical_alignment="top")
     
     with col_mw:
         mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
@@ -549,11 +551,9 @@ if run:
         labels = list(money_weights.keys())
         values = list(money_weights.values())
     
-        # Modern color palette
         colors = ["#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F", "#EDC948"]
     
-        # Make plot
-        fig2, ax2 = plt.subplots(figsize=(4.8, 4.8))
+        fig2, ax2 = plt.subplots(figsize=(5.5, 5.5))  # wider so labels fit
     
         wedges, texts, autotexts = ax2.pie(
             values,
@@ -561,21 +561,23 @@ if run:
             autopct="%1.1f%%",
             startangle=90,
             colors=colors,
-            pctdistance=0.75,
-            textprops={'color': 'white', 'weight': 'bold', 'fontsize': 10}
+            pctdistance=0.80,          # shift % inside
+            labeldistance=1.1,         # shift labels OUTSIDE the chart
+            textprops={'color': 'white', 'weight': 'bold', 'fontsize': 11}
         )
     
-        # Add white circle for a clean donut style
-        centre_circle = plt.Circle((0, 0), 0.55, color='black', fc='black')
+        # Modern donut center
+        centre_circle = plt.Circle((0, 0), 0.50, color='black', fc='black')
         fig2.gca().add_artist(centre_circle)
     
-        ax2.axis('equal')  # perfect circle
+        ax2.axis('equal')
     
-        # Title styling
-        plt.setp(autotexts, size=10, weight='bold')
+        # Adjust label text style
         plt.setp(texts, color='white', fontsize=11)
+        plt.setp(autotexts, size=10, weight='bold')
     
         st.pyplot(fig2)
+
 
       
     # ------------------------------------------------
@@ -645,6 +647,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
