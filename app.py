@@ -533,30 +533,50 @@ if run:
     
     st.metric("Max Drawdown", f"{max_dd:.2%}")
 
-    # ---------------------------
-    # MONEY WEIGHTS + PIE CHART (SIDE BY SIDE)
-    # ---------------------------
-    
+   # -----------------------------
+    # MONEY WEIGHTS + ALLOCATION CHART (SIDE-BY-SIDE)
+    # -----------------------------
     st.subheader("💰 Current Money Weights (€)")
-    
-    col_mw, col_pie = st.columns([1.2, 1])   # table bigger than pie chart
+    col_mw, col_pie = st.columns([1.2, 1])
     
     with col_mw:
         mw_df = pd.DataFrame.from_dict(money_weights, orient="index", columns=["Value (€)"])
-        st.dataframe(mw_df)
+        st.dataframe(mw_df, use_container_width=True)
     
     with col_pie:
-        st.write("")  # spacing
         st.subheader("📊 Allocation")
-        
-        fig2, ax2 = plt.subplots(figsize=(4.5, 4.5))  # well-balanced size
+    
         labels = list(money_weights.keys())
         values = list(money_weights.values())
     
-        ax2.pie(values, labels=labels, autopct="%1.1f%%", startangle=90)
-        ax2.axis("equal")
+        # Modern color palette
+        colors = ["#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F", "#EDC948"]
+    
+        # Make plot
+        fig2, ax2 = plt.subplots(figsize=(4.8, 4.8))
+    
+        wedges, texts, autotexts = ax2.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90,
+            colors=colors,
+            pctdistance=0.75,
+            textprops={'color': 'white', 'weight': 'bold', 'fontsize': 10}
+        )
+    
+        # Add white circle for a clean donut style
+        centre_circle = plt.Circle((0, 0), 0.55, color='black', fc='black')
+        fig2.gca().add_artist(centre_circle)
+    
+        ax2.axis('equal')  # perfect circle
+    
+        # Title styling
+        plt.setp(autotexts, size=10, weight='bold')
+        plt.setp(texts, color='white', fontsize=11)
     
         st.pyplot(fig2)
+
       
     # ------------------------------------------------
     # SOLD POSITIONS LOG (WITH PnL)
@@ -625,6 +645,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
