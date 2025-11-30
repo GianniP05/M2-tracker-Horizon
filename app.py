@@ -548,7 +548,7 @@ if run:
     # ------------------------------------------------
     # DISPLAY RESULTS
     # ------------------------------------------------
-    st.subheader("💶 Portfolio Results (Real Money)")
+    st.subheader("Portfolio Results (Real Money)")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Starting Value", f"€{starting_value:,.2f}")
@@ -645,6 +645,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
