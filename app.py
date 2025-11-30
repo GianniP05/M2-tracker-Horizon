@@ -481,6 +481,7 @@ if run:
     sharpe = (Rp - 0.05) / sig_p
     M2 = sharpe * sig_b + 0.05
     rf = 0.05 / 252
+    
     # ------------------------------------------------
     # B&R M² (competition formula)
     # ------------------------------------------------
@@ -646,6 +647,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
