@@ -42,7 +42,7 @@ st.markdown("""
 # ------------------------------------------------
 # TITLE
 # ------------------------------------------------
-st.title("📈 M² Portfolio Tracker by Horizon Capital")
+st.title("M² Portfolio Tracker by Horizon Capital")
 
 
 # ------------------------------------------------
@@ -119,7 +119,7 @@ with col_left:
         else:
             st.error("Please enter a ticker.")
 
-    st.subheader("📊 Current Portfolio")
+    st.subheader("Current Portfolio")
     if len(st.session_state.positions) > 0:
         df = pd.DataFrame(st.session_state.positions)
         df_display = df.rename(columns={
@@ -134,7 +134,7 @@ with col_left:
     # ------------------------------------------------
     # SELL A POSITION (CLEAR UX)
     # ------------------------------------------------
-    st.subheader("📉 Sell a Position")
+    st.subheader("Sell a Position")
 
     st.markdown("""
     **How selling works:**
@@ -216,7 +216,7 @@ with col_right:
         st.session_state.starting_value = 5000.0   # default only ON FIRST RUN
     
     starting_value = st.number_input(
-        "💰 Starting portfolio value (€)",
+        "Starting portfolio value (€)",
         min_value=0.0,
         value=st.session_state.starting_value,
         step=100.0
@@ -414,8 +414,6 @@ if run:
     
     # Total portfolio value over time
     portfolio_value_series = cash_series + invested_series
-
-
     portfolio_value_series = cash_series + invested_series
 
     # ------------------------------------------------
@@ -558,7 +556,7 @@ if run:
     c3.metric("Invested", f"€{invested_final:,.2f}")
     c4.metric("Cash", f"€{cash_final:,.2f}")
 
-    st.subheader("📈 Risk-Adjusted Metrics")
+    st.subheader("Risk-Adjusted Metrics")
     r1, r2, r3, r4 = st.columns(4)
     r1.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
     r2.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
@@ -577,14 +575,14 @@ if run:
     # -----------------------------
     # MONEY WEIGHTS + ALLOCATION CHART (SIDE-BY-SIDE, FIXED ALIGNMENT)
     # -----------------------------
-    st.subheader("💰 Current Money Weights (€)")
+    st.subheader("Current Money Weights (€)")
     st.dataframe(pd.DataFrame.from_dict(money_weights, orient='index', columns=["Value (€)"]))
 
     # ------------------------------------------------
     # SOLD POSITIONS LOG (WITH PnL)
     # ------------------------------------------------
     if len(trade_infos) > 0:
-        st.subheader("📜 Sold Positions Log (Realized PnL)")
+        st.subheader("Sold Positions Log (Realized PnL)")
         log_rows = []
         for info in trade_infos:
             log_rows.append({
@@ -603,7 +601,7 @@ if run:
     # ------------------------------------------------
     # CHART (UNCHANGED LOOK)
     # ------------------------------------------------
-    st.subheader("📉 Portfolio vs Benchmark (Value in €)")
+    st.subheader("Portfolio vs Benchmark (Value in €)")
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(port_value, label="Portfolio (€)")
     ax.plot(bench_value, label="Benchmark (€)")
@@ -647,6 +645,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
