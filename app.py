@@ -480,6 +480,44 @@ if run:
 
     sharpe = (Rp - 0.05) / sig_p
     M2 = sharpe * sig_b + 0.05
+    rf = 0.05 / 252
+    # ------------------------------------------------
+    # B&R M² (competition formula)
+    # ------------------------------------------------
+    
+    # Step 1: convert daily returns → weekly returns
+    weekly_port = port_ret.resample("W").apply(lambda x: (1 + x).prod() - 1)
+    weekly_bench = bench_ret2.resample("W").apply(lambda x: (1 + x).prod() - 1)
+    
+    # Step 2: weekly risk-free return (5% annual)
+    rf_weekly = (1 + 0.05)**(1/52) - 1
+    
+    # Step 3: weekly excess returns
+    delta_d = weekly_port - rf_weekly
+    delta_b = weekly_bench - rf_weekly
+    
+    # Step 4: volatility of excess returns
+    sigma_d = delta_d.std()
+    sigma_b = delta_b.std()
+    
+    # Step 5: cumulative portfolio return and cumulative RF return
+    R_T = (1 + weekly_port).prod() - 1
+    R_f_cml = (1 + rf_weekly)**len(weekly_port) - 1
+    
+    # Step 6: cumulative excess return
+    D_T = R_T - R_f_cml
+    
+    # Step 7: compute B&R M²
+    f = 0.002
+    c = 3
+    
+    term1 = R_f_cml
+    term2 = D_T * max(
+        sigma_b / max(sigma_d, f),
+        (1/c) * (-D_T / abs(D_T)) if D_T != 0 else 0
+    )
+    
+    M2_BR = term1 + term2
 
     # Final invested & cash
     last_date = port_value.index[-1]
@@ -520,10 +558,12 @@ if run:
     c4.metric("Cash", f"€{cash_final:,.2f}")
 
     st.subheader("📈 Risk-Adjusted Metrics")
-    r1, r2, r3 = st.columns(3)
+    r1, r2, r3, r4 = st.columns(4)
     r1.metric("Portfolio Return (Annualized)", f"{Rp:.2%}")
     r2.metric("Benchmark Return (Annualized)", f"{Rb:.2%}")
-    r3.metric("M²", f"{M2:.2%}")
+    r3.metric("Classic M²", f"{M2:.2%}")
+    r4.metric("B&R M²", f"{M2_BR:.2%}")
+
     # ---------------------------
     # MAX DRAWDOWN
     # ---------------------------
@@ -606,6 +646,7 @@ if st.button("Reset My Portfolio"):
     st.session_state.trades = []
     save_to_url()
     st.success("Your portfolio (open positions + sold log) has been reset.")
+
 
 
 
