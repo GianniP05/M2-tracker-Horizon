@@ -1,4 +1,4 @@
-# 📈 M² Portfolio Tracker (Streamlit)
+# M² Portfolio Tracker (Streamlit)
 
 A professional **real-money portfolio tracking dashboard** built with Streamlit, designed to track **open and closed positions**, cash balance, benchmark performance, and advanced **risk-adjusted metrics** including **Classic M²** and **B&R M²**.
 
